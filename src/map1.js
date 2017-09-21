@@ -1,143 +1,131 @@
-
-import React, { Component } from 'react';
-import {
-  AppRegistry,
-  StyleSheet,
-  Text,
-  View,
-  Button
-} from 'react-native';
+import React, { Component } from 'react'
+import {TextInput,Button, View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native'
+import getDirections from 'react-native-google-maps-directions'
 import MapView from 'react-native-maps';
-import RNGooglePlaces from 'react-native-google-places';
-
+import Polyline from '@mapbox/polyline';
+import Geocoder from 'react-native-geocoder';
 
 export default class MapSc extends Component {
+  static navigationOptions = {
+    header : false
+  }
   constructor(props) {
     super(props);
+    console.disableYellowBox = true;
+    this.getDirections = this.getDirections.bind(this);
+    this.getDirectionRoute = this.getDirectionRoute.bind(this);
+    this.getLatLong = this.getLatLong.bind(this);
+
     this.state = {
-      region: {
-        latitude: 24.8825,
-        longitude: 67.0694,
-        latitudeDelta: 0.015,
-        longitudeDelta: 0.0121,
-      },
-      marker: {
-        latitude: 0, 
-        longitude: 0
-      }
+      destlat:'',
+      destlong: '',
+      srclat:24.8825,
+      srclong:67.0694,
+      dest:'',
+      coords: []
     }
   }
 
   componentWillMount() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        var latitude = position.coords.latitude ;
-        var longitude = position.coords.longitude ;
-        console.warn(latitude,longitude)
-        var region = {
-            latitude,
-            longitude,
-            latitudeDelta: 0.015,
-            longitudeDelta: 0.0121,
-        }
         this.setState({
-            region
+          srclat: position.coords.latitude,
+          srclong: position.coords.longitude
         })
-    },
-      (err) => console.warn(err.message)
-  ) 
+       
+      },
+      (error) => alert(JSON.stringify(error)),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
+    );
   }
 
-  openSearchModal() {
-    // RNGooglePlaces.openAutocompleteModal()
-    //   .then((place) => {
-    //     console.log(place);
-    //     this.setState({
-    //       latitude: place.latitude,
-    //       longitude: place.longitude
-    //     })
-    //   })
-    //   .catch((error) => console.log(error));
+  getDirectionRoute() {
+    let arr1 = `${this.state.srclat}`+','+`${this.state.srclong}`
+    let arr2 = `${this.state.destlat}`+','+`${this.state.destlong}`
+    this.getDirections(arr1, arr2);
+  }
+
+
+  getLatLong(dest) {
+    this.setState({dest});
+    Geocoder.geocodeAddress(dest).then(res => {
+      this.setState({
+        destlat: res[0].position.lat,
+        destlong: res[0].position.lng
+      });
+    
+     
+    })
+      .catch(err => console.log(err))
+  }
+
+  async getDirections(startLoc, destinationLoc) {
+    console.log(startLoc,destinationLoc)
+    try {
+      let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}`)
+      let respJson = await resp.json();
+      let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
+      
+      let coords = points.map((point, index) => {
+        return {
+          latitude: point[0],
+          longitude: point[1]
+        }
+      })
+      this.setState({ coords: coords })
+      return coords
+    } catch (error) {
+      alert(error)
+      return error
+    }
   }
 
   render() {
     return (
-      <View style={styles.container}>
-        <MapView
-          showsUserLocation={true}
-          followsUserLocation={true}
-          showsCompass={true}
-          showsPointOfInternet={false}
-          toolbarEnabled={true}
-          style={styles.map}
-          region={this.state.region}
-          provider= "google"
-          mapType="standard"
-
-        >
-          <MapView.Marker
-            coordinate={this.state.marker}
-          >
-          </MapView.Marker>
-        </MapView>
-        <View style={styles.container}>
+      <View>
+        <MapView.Callout style={styles.button} >
+          <TextInput
+                placeholder="Enter your destination"
+                onChangeText={(dest)=>this.getLatLong(dest)}
+                value={this.state.dest}
+            />
+            <Button onPress={this.getDirectionRoute} title='Get Direction Route' ></Button>
+          </MapView.Callout>
+        <MapView style={styles.map} initialRegion={{
+          latitude: parseFloat(this.state.srclat),
+          longitude: parseFloat(this.state.srclong),
+          latitudeDelta: 0.0922*10,
+          longitudeDelta: 0.0421*10
+        }}>
+              
+          
+          <MapView.Polyline
+            coordinates={this.state.coords}
+            strokeWidth={2}
+            strokeColor="red" />
             
-       </View>
-       </View>
+            
+        </MapView>
+       
+      </View>
     );
   }
 }
-// onRegionChange={this.onRegionChange}
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
   map: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    height: 350 ,
-
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+    zIndex: 1
   },
-  pin: {
-    backgroundColor: "#fffa",
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: 'black',
-    borderWidth: 1,
-    padding: 5,
-    borderRadius: 5
-  },
-  pinImage: {
-    width: 20,
-    height: 20
-  },
-  pinText: {
-    color: 'red'
-  }
-  ,
-  callout: {
-    flex: 1,
-    paddingRight: 10,
-    paddingBottom: 10,
-    marginBottom: 10,
-    marginRight: 10
-  },
-  calloutPhoto: {
-    flex: 1,
-    width: 200,
-    height: 80
-  },
-  calloutTitle: {
-    fontSize: 16
+  button: {
+    zIndex:2
   }
 });
+

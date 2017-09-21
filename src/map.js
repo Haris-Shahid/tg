@@ -34,12 +34,14 @@ export default class MapS extends Component {
       },
       details:[]
     }
+    // console.disableYellowBox=true ;
   }
 
   componentWillMount() {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        var latitude = position.coords.latitude ;
+        (position) => {
+          console.log(position)
+          var latitude = position.coords.latitude ;
         var longitude = position.coords.longitude ;
         // console.warn(latitude,longitude)
         var region = {
@@ -48,8 +50,13 @@ export default class MapS extends Component {
             latitudeDelta: 0.015,
             longitudeDelta: 0.0121,
         }
+        var marker={
+          latitude ,
+          longitude
+        }
         this.setState({
-            region
+            region,
+            marker 
           })
         },
         (err) => console.warn(err.message)
@@ -99,7 +106,7 @@ export default class MapS extends Component {
 
         >
           <MapView.Marker
-            coordinate={this.state.marker}
+            coordinate={this.state.region}
           >
           </MapView.Marker>
         </MapView>

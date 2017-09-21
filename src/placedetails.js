@@ -1,7 +1,11 @@
 import React , {Component} from 'react' ;
-import { View ,Text , StyleSheet, Dimensions } from 'react-native' 
+import { View ,Text , StyleSheet, Dimensions,Image } from 'react-native' 
 
 export default class PlaceDetails extends Component{
+   constructor(){
+       super();
+       console.disableYellowBox= true;
+   }
     static navigationOptions = {
         title: 'Place Details',
       }
@@ -13,6 +17,32 @@ export default class PlaceDetails extends Component{
              <Text style={{fontSize:20,fontWeight:'bold'}} >
                  {params.name}
              </Text>
+             <View style={{flexDirection:'column'}} >
+             <Text style={{fontSize:16,fontWeight:'bold'}} >
+                 Complete Address: 
+             </Text>
+             <Text style={{fontSize:15}} >
+               {params.vicinity}
+             </Text>
+             </View>
+             <View>
+             <Text style={{fontSize:16,fontWeight:'bold'}} >
+                 Rating : 
+             </Text>
+             <Text style={{fontSize:15}} >
+               {params.rating}
+             </Text>
+             </View>
+             <View>
+             <Text style={{fontSize:16,fontWeight:'bold'}} >
+                 Types : 
+             </Text>
+             <Text style={{fontSize:15}} >
+               {params.types.map((v,i)=>{
+                  return (<Text key={i} >{v}</Text>)
+               })}
+             </Text>
+             </View>
           </View>
         );
     }
@@ -25,7 +55,6 @@ const styles = StyleSheet.create({
         backgroundColor:'white',
         height,
         alignItems: 'center' ,
-        justifyContent: 'center'
     },
    
 })

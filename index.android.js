@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
 });
 
 const App = StackNavigator({
-  Home: { screen: MapS },
+  Home: { screen:MapSc },
   Signin: { screen: Signin },
   Login: { screen: Login },
   Map: { screen: MapS },
